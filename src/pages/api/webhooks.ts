@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next"
 import {Readable} from "stream"
 import {stripe} from "../../services/stripe";
 import Stripe from "stripe";
+import { saveSub } from "./_lib/manageSub";
 async function buffer(readable:Readable){
     const chunks=[];
     for await(const chunk of readable ){
@@ -17,7 +18,10 @@ export const config={
     }
 }
 const relevantEvents =new Set ([
-    "checkout.session.completed"
+    "checkout.session.completed",
+    "customer.subscription.created",
+    "customer.subscription.updated",
+    "customer.subscription.deleted"
 ])
 export default async (req: NextApiRequest, res:NextApiResponse) => {
    if(req.method ==="POST"){
@@ -31,12 +35,39 @@ export default async (req: NextApiRequest, res:NextApiResponse) => {
         
         
         
-        return res.status(401).send(`webhook error:${err.message}`)
+        return res.status(400).send(`webhook error:${err.message}`)
     }
     
     const {type} = event
     if(relevantEvents.has(type)){
-        console.log("event",event)
+      try{
+        switch(type){
+            case"customer.subscription.updated":
+            case"customer.subscription.deleted":
+                const subscription = event.data.object as Stripe.Subscription;
+                await saveSub(
+                  subscription.id,
+                  subscription.customer.toString(),
+                  false
+                );
+                break;
+            case "checkout.session.completed":
+                const checkoutSession = event.data.object as Stripe.Checkout.Session
+                await saveSub(
+                    checkoutSession.subscription.toString(),
+                    checkoutSession.customer.toString(),
+                    true
+                );
+                break;   
+                         
+               
+             default:
+                 throw new Error("Unhanked event.")
+                 
+        }
+      } catch (err){
+            return res.json({error:"WEbhook failed"})
+      }
     }
    res.json({received:true})
 
