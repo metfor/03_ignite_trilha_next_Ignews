@@ -8,10 +8,12 @@
     "start": "next start"
   },
   "dependencies": {
+    "@prismicio/client": "^5.0.0",
     "@stripe/stripe-js": "^1.15.0",
     "axios": "^0.21.1",
     "faunadb": "^4.3.0",
     "next": "10.2.3",
+    "prismic-dom": "^2.2.5",
     "react": "17.0.2",
     "react-dom": "17.0.2",
     "react-icon": "^1.0.0",
@@ -21,6 +23,7 @@
   },
   "devDependencies": {
     "@types/node": "^15.6.1",
+    "@types/prismic-dom": "^2.1.1",
     "@types/react": "^17.0.8",
     "next-auth": "^3.24.1",
     "typescript": "^4.3.2"
