@@ -1,4 +1,5 @@
 import { useSession,signIn } from "next-auth/client";
+import { useRouter } from "next/router";
 
 import { api } from "../../services/api";
 import { getStripeJs } from "../../services/stripe-js";
@@ -9,12 +10,17 @@ interface SubButtonProps{
 
 export function SubButton({priceId}:SubButtonProps){
     const [session]= useSession();
+    const router=useRouter()
    async function handleSub(){
         if(!session){
             signIn("github")
             return
         }
         // criação da checkout sessions
+        if(session.activeSub){
+            router.push("/posts")
+            return;
+        }
         try{
             const response= await api.post("/sub")
             const{sessionId}=response.data;
